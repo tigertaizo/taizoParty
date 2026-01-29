@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>写真で一言！</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@500;700&display=swap');
+
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background-color: #fef3c7;
+            background-image: radial-gradient(#fcd34d 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .title-font {
+            font-family: 'Mochiy+Pop+One', sans-serif;
+        }
+
+        .photo-frame {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border: 6px solid white;
+            transition: transform 0.2s;
+        }
+
+        .photo-container {
+            aspect-ratio: 4/3;
+            background-color: #e5e7eb;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .photo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .btn-push {
+            transition: all 0.1s;
+            box-shadow: 0px 5px 0px 0px rgba(0,0,0,0.2);
+        }
+        .btn-push:active {
+            transform: translateY(3px);
+            box-shadow: 0px 2px 0px 0px rgba(0,0,0,0.2);
+        }
+
+        /* アニメーション用クラス */
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        
+        /* クエスチョンマークのアニメーション */
+        .bounce-slow {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(-5%); }
+            50% { transform: translateY(5%); }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center py-2 px-4">
+
+    <!-- Header -->
+    <header class="mb-1 text-center">
+        <h1 class="text-2xl md:text-3xl font-bold text-orange-600 title-font tracking-wider mb-1 drop-shadow-sm">
+            写真で一言！
+        </h1>
+    </header>
+
+    <!-- Main Game Area -->
+    <main class="w-full max-w-lg bg-white rounded-2xl p-3 shadow-xl border-4 border-orange-200">
+        
+        <!-- Roulette Section -->
+        <div class="relative mb-3">
+            <div id="photoFrame" class="photo-frame rounded-xl photo-container bg-gray-200">
+                <img id="displayImage" src="" alt="Game Image" class="photo-img hidden">
+                
+                <!-- Initial Question Mark Overlay -->
+                <div id="questionOverlay" class="absolute inset-0 flex flex-col items-center justify-center bg-orange-100 z-10">
+                    <div class="text-center bounce-slow">
+                        <i class="fas fa-question-circle text-5xl md:text-7xl text-orange-400 mb-2 drop-shadow-md"></i>
+                        <p class="text-orange-500 font-bold text-base md:text-lg tracking-widest">何が出るかな？</p>
+                    </div>
+                </div>
+
+                <!-- Loading/Empty State overlay -->
+                <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-400 hidden z-20">
+                    <i class="fas fa-images text-3xl mb-2"></i>
+                    <p class="text-sm">写真がありません</p>
+                </div>
+
+                <!-- Overlay for Roulette Effect -->
+                <div id="rouletteOverlay" class="absolute inset-0 bg-black bg-opacity-0 transition-colors duration-100 pointer-events-none z-30"></div>
+            </div>
+            
+            <!-- Badge -->
+            <div class="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 font-bold px-2 py-0.5 text-xs rounded-full shadow-md transform rotate-3 border-2 border-white z-40">
+                <span id="imageCounter">SAMPLE</span>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-col gap-2 mb-3">
+            <button id="actionButton" onclick="toggleRoulette()" class="btn-push w-full bg-red-500 hover:bg-red-600 text-white font-bold text-lg py-2 rounded-xl shadow-lg flex items-center justify-center gap-2">
+                <i class="fas fa-play"></i> <span>スタート！</span>
+            </button>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t-2 border-dashed border-gray-300 my-3"></div>
+
+        <!-- File Upload Section -->
+        <div class="bg-blue-50 rounded-xl p-3 border-2 border-blue-100">
+            <h3 class="font-bold text-blue-800 mb-1 flex items-center gap-2 text-sm">
+                <i class="fas fa-camera"></i> オリジナル写真を使う
+            </h3>
+            <p class="text-xs text-blue-600 mb-2 leading-tight">
+                スマホやPCの写真を追加（サーバー送信なし）。
+            </p>
+            
+            <label class="cursor-pointer bg-white text-blue-600 font-bold py-1.5 px-3 rounded-lg border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 transition flex items-center justify-center gap-2 shadow-sm text-xs">
+                <i class="fas fa-file-upload"></i> 写真を選択 (複数OK)
+                <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)">
+            </label>
+
+            <div class="mt-1 text-right">
+                 <button id="resetButton" type="button" class="text-xs text-red-500 hover:underline scale-90 origin-right">
+                    リセットして初期状態に戻す
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="mt-2 text-center text-gray-500 text-[10px]">
+        &copy; 2025 写真で一言！ - Taizo's App
+    </footer>
+
+    <script>
+        // Default Sample Images
+        // 初期状態では空にして、ユーザーに追加させるか、必要ならここを有効にする
+        const defaultImages = [
+            //"https://images.unsplash.com/photo-1543852786-1cf6624b9987?q=80&w=1000&auto=format&fit=crop", 
+            //"https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=1000&auto=format&fit=crop",
+            "img/001.jpg","img/002.jpg","img/003.jpg","img/004.jpg"
+
+        ];
+
+        let images = [...defaultImages];
+        let isSpinning = false;
+        let intervalId = null;
+        let currentIndex = 0;
+
+        const displayImg = document.getElementById('displayImage');
+        const actionBtn = document.getElementById('actionButton');
+        const photoFrame = document.getElementById('photoFrame');
+        const imageCounter = document.getElementById('imageCounter');
+        const resetBtn = document.getElementById('resetButton');
+        const questionOverlay = document.getElementById('questionOverlay');
+        const emptyState = document.getElementById('emptyState');
+
+        // Initialize
+        updateCounter();
+
+        // Event Listeners
+        if (resetBtn) {
+            resetBtn.addEventListener('click', resetImages);
+        }
+
+        function toggleRoulette() {
+            if (images.length === 0) {
+                alert("写真がねえぞ！下のボタンから写真を追加してくろ！");
+                return;
+            }
+
+            if (isSpinning) {
+                stopRoulette();
+            } else {
+                startRoulette();
+            }
+        }
+
+        function startRoulette() {
+            isSpinning = true;
+            
+            // Hide question mark, show image
+            questionOverlay.classList.add('hidden');
+            displayImg.classList.remove('hidden');
+            
+            // UI Update
+            actionBtn.innerHTML = '<i class="fas fa-stop"></i> <span>ストップ！</span>';
+            actionBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+            actionBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            
+            // High speed shuffle
+            let speed = 20; 
+            intervalId = setInterval(() => {
+                let nextIndex;
+                do {
+                    nextIndex = Math.floor(Math.random() * images.length);
+                } while (images.length > 1 && nextIndex === currentIndex);
+                
+                currentIndex = nextIndex;
+                displayImg.src = images[currentIndex];
+            }, speed);
+        }
+
+        function stopRoulette() {
+            isSpinning = false;
+            clearInterval(intervalId);
+
+            // UI Update
+            actionBtn.innerHTML = '<i class="fas fa-play"></i> <span>次の写真へ</span>';
+            actionBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+            actionBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+
+            // Visual Effect
+            photoFrame.classList.add('shake');
+            setTimeout(() => {
+                photoFrame.classList.remove('shake');
+            }, 500);
+        }
+
+        // File Upload Handling
+        function handleFiles(files) {
+            if (!files.length) return;
+
+            const newImages = Array.from(files).map(file => URL.createObjectURL(file));
+            images = [...images, ...newImages];
+
+            // Reset input
+            document.getElementById('fileInput').value = '';
+            
+            alert(`${newImages.length}枚の写真を追加したぞ！東北魂、見せるときじゃねーべが！`);
+            
+            // Update counter but KEEP the question mark overlay visible
+            // We don't want to spoil the new images yet!
+            updateCounter();
+            
+            // Ensure question mark is shown (in case it was hidden)
+            questionOverlay.classList.remove('hidden');
+            displayImg.classList.add('hidden');
+        }
+
+        function resetImages() {
+            if(confirm("本当に追加した写真を消して、最初の状態に戻すかい？")) {
+                images = [...defaultImages];
+                currentIndex = 0;
+                
+                // Clear input
+                const fileInput = document.getElementById('fileInput');
+                if (fileInput) fileInput.value = '';
+
+                updateCounter();
+                
+                // Show question mark again
+                questionOverlay.classList.remove('hidden');
+                displayImg.classList.add('hidden');
+                
+                // Reset button text
+                actionBtn.innerHTML = '<i class="fas fa-play"></i> <span>スタート！</span>';
+                actionBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                actionBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+                
+                alert("初期状態に戻したばい！");
+            }
+        }
+
+        function updateCounter() {
+            // Check if matches defaults
+            const isDefault = images.length === defaultImages.length && images.every((val, index) => val === defaultImages[index]);
+            
+            if (images.length === 0) {
+                imageCounter.textContent = "0 枚";
+            } else if (isDefault && images.length > 0) {
+                imageCounter.textContent = "SAMPLE";
+            } else {
+                imageCounter.textContent = `全 ${images.length} 枚`;
+            }
+
+            if(images.length === 0) {
+                emptyState.classList.remove('hidden');
+                questionOverlay.classList.add('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                // Don't force questionOverlay here, as we might be in the middle of a game loop if called elsewhere
+                // But for initial load/reset, it's handled by other functions
+            }
+        }
+    </script>
+</body>
+</html>

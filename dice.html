@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>テーマサイコロトーク</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --dice-size: 140px;
+        }
+
+        body {
+            background: radial-gradient(circle, #2c3e50, #000000);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* 上から順に配置 */
+            color: white;
+            font-family: 'sans-serif';
+            overflow-x: hidden;
+            overflow-y: auto; /* スクロールを許可 */
+            padding: 40px 20px;
+        }
+
+        /* 3Dサイコロのコンテナ */
+        .scene {
+            width: var(--dice-size);
+            height: var(--dice-size);
+            perspective: 600px;
+            margin: 40px 0;
+            flex-shrink: 0;
+        }
+
+        .dice {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 2s cubic-bezier(0.2, 0.8, 0.3, 1);
+        }
+
+        /* 各面の設定 */
+        .dice-face {
+            position: absolute;
+            width: var(--dice-size);
+            height: var(--dice-size);
+            border: 2px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            border-radius: 12px;
+            backface-visibility: hidden;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        .front  { transform: rotateY(0deg) translateZ(calc(var(--dice-size) / 2)); }
+        .back   { transform: rotateY(180deg) translateZ(calc(var(--dice-size) / 2)); }
+        .right  { transform: rotateY(90deg) translateZ(calc(var(--dice-size) / 2)); }
+        .left   { transform: rotateY(-90deg) translateZ(calc(var(--dice-size) / 2)); }
+        .top    { transform: rotateX(90deg) translateZ(calc(var(--dice-size) / 2)); }
+        .bottom { transform: rotateX(-90deg) translateZ(calc(var(--dice-size) / 2)); }
+
+        /* 結果表示のスタイル */
+        #result-display {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease-out;
+            min-height: 100px;
+        }
+
+        #result-display.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="text-center mb-4">
+        <h1 class="text-3xl font-bold mb-2">🎲 サイコロトーク</h1>
+        <p class="text-gray-300 text-sm">全力でやんねど、駄目だがんない！</p>
+    </div>
+
+    <!-- サイコロ本体 -->
+    <div class="scene">
+        <div class="dice" id="dice">
+            <div class="dice-face front" id="face-0">テーマ1</div>
+            <div class="dice-face back" id="face-1">テーマ2</div>
+            <div class="dice-face right" id="face-2">テーマ3</div>
+            <div class="dice-face left" id="face-3">テーマ4</div>
+            <div class="dice-face top" id="face-4">テーマ5</div>
+            <div class="dice-face bottom" id="face-5">テーマ6</div>
+        </div>
+    </div>
+
+    <!-- 結果表示エリア -->
+    <div id="result-display" class="mt-4 text-center bg-white/10 p-6 rounded-2xl backdrop-blur-md border border-white/20 max-w-xs w-full mx-auto">
+        <p class="text-xs text-yellow-400 font-bold mb-1 uppercase tracking-widest">Selected Theme</p>
+        <h2 id="result-text" class="text-xl font-bold">サイコロを振ってね</h2>
+    </div>
+
+    <!-- 操作パネル -->
+    <div class="mt-8 flex flex-col items-center gap-6 w-full">
+        <button id="roll-btn" class="bg-red-600 hover:bg-red-500 active:scale-95 text-white font-bold py-5 px-16 rounded-full text-2xl shadow-[0_0_20px_rgba(220,38,38,0.5)] transition-all duration-200 z-10">
+            サイコロを振る！
+        </button>
+        
+        <button id="edit-btn" class="text-sm text-gray-400 underline hover:text-white transition-colors">
+            テーマを編集する
+        </button>
+    </div>
+
+    <!-- 編集用モーダル -->
+    <div id="edit-modal" class="fixed inset-0 bg-black/90 hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-700">
+            <h3 class="text-xl font-bold mb-4 text-center">トークテーマを編集</h3>
+            <div id="input-container" class="space-y-3 mb-6">
+                <!-- Inputs will be generated here -->
+            </div>
+            <div class="flex gap-3">
+                <button id="save-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold transition-colors">保存する</button>
+                <button id="close-btn" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-xl transition-colors">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // デフォルトのテーマ
+        let themes = [
+            "最近ハマっていること",
+            "行ってみたい旅行先",
+            "実は自慢したいこと",
+            "昨日の晩ごはん",
+            "地元の好きなところ",
+            "最近あった小さな幸せ"
+        ];
+
+        // 要素の取得
+        const dice = document.getElementById('dice');
+        const rollBtn = document.getElementById('roll-btn');
+        const resultDisplay = document.getElementById('result-display');
+        const resultText = document.getElementById('result-text');
+        const editBtn = document.getElementById('edit-btn');
+        const editModal = document.getElementById('edit-modal');
+        const inputContainer = document.getElementById('input-container');
+        const saveBtn = document.getElementById('save-btn');
+        const closeBtn = document.getElementById('close-btn');
+
+        // 各面の回転角度の定義 [x, y]
+        const rotations = [
+            [0, 0],     // Front
+            [0, 180],   // Back
+            [0, -90],   // Right
+            [0, 90],    // Left
+            [-90, 0],   // Top
+            [90, 0]     // Bottom
+        ];
+
+        // 初期表示の設定
+        function updateDiceFaces() {
+            themes.forEach((theme, i) => {
+                const face = document.getElementById(`face-${i}`);
+                if (face) face.textContent = theme;
+            });
+        }
+
+        // サイコロを振る処理
+        let isRolling = false;
+        function rollDice() {
+            if (isRolling) return;
+            isRolling = true;
+            
+            // 演出：結果表示を隠す
+            resultDisplay.classList.remove('show');
+            rollBtn.disabled = true;
+            rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // ランダムな目を選択
+            const resultIndex = Math.floor(Math.random() * 6);
+            
+            // 派手に回転させるために、基本の角度に数回転分(360 * n)を足す
+            const extraSpins = 5;
+            const targetRotation = rotations[resultIndex];
+            const x = targetRotation[0] + (360 * extraSpins);
+            const y = targetRotation[1] + (360 * extraSpins);
+
+            // 適用
+            dice.style.transform = `rotateX(${x}deg) rotateY(${y}deg)`;
+
+            // アニメーション完了後の処理
+            setTimeout(() => {
+                isRolling = false;
+                rollBtn.disabled = false;
+                rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                
+                // 結果を表示
+                resultText.textContent = themes[resultIndex];
+                resultDisplay.classList.add('show');
+                
+                // 次の回転のために回転数をリセット（見た目が変わらないように）
+                setTimeout(() => {
+                    dice.style.transition = 'none';
+                    dice.style.transform = `rotateX(${targetRotation[0]}deg) rotateY(${targetRotation[1]}deg)`;
+                    setTimeout(() => {
+                        dice.style.transition = 'transform 2s cubic-bezier(0.2, 0.8, 0.3, 1)';
+                    }, 50);
+                }, 500);
+
+            }, 2000);
+        }
+
+        // 編集機能
+        function openEditModal() {
+            inputContainer.innerHTML = '';
+            themes.forEach((theme, i) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-2';
+                const label = document.createElement('span');
+                label.className = 'text-xs text-gray-400 w-4';
+                label.textContent = i + 1;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = theme;
+                input.className = 'flex-1 bg-slate-700 border border-slate-600 p-2 rounded text-white text-sm focus:outline-none focus:border-blue-500';
+                input.placeholder = `テーマ ${i + 1}`;
+                div.appendChild(label);
+                div.appendChild(input);
+                inputContainer.appendChild(div);
+            });
+            editModal.classList.remove('hidden');
+            editModal.classList.add('flex');
+        }
+
+        function saveThemes() {
+            const inputs = inputContainer.querySelectorAll('input');
+            const newThemes = Array.from(inputs).map(input => input.value.trim() || "無題のテーマ");
+            themes = newThemes;
+            updateDiceFaces();
+            editModal.classList.add('hidden');
+            editModal.classList.remove('flex');
+            resultDisplay.classList.remove('show');
+            resultText.textContent = "テーマが更新されたぞ！";
+            resultDisplay.classList.add('show');
+        }
+
+        // イベントリスナー
+        rollBtn.addEventListener('click', rollDice);
+        editBtn.addEventListener('click', openEditModal);
+        saveBtn.addEventListener('click', saveThemes);
+        closeBtn.addEventListener('click', () => {
+            editModal.classList.add('hidden');
+            editModal.classList.remove('flex');
+        });
+
+        // 初期化
+        window.onload = updateDiceFaces;
+
+    </script>
+</body>
+</html>

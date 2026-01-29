@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>クイズ！100人に聞きました風パネル</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel CDN (JSXをブラウザで実行するため) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-x-180 { transform: rotateX(180deg); }
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const App = () => {
+            // 問題データセット
+            const quizData = [
+                {
+                    id: 1,
+                    question: "「冬の定番」といえば？",
+                    answers: [
+                        { text: "こたつでみかんを食べる", points: 35 },
+                        { text: "スキー・スノーボード", points: 20 },
+                        { text: "熱々のおでん", points: 15 },
+                        { text: "温泉旅行に行く", points: 10 },
+                        { text: "鍋パーティー", points: 8 },
+                        { text: "雪かき（重労働だべ）", points: 5 },
+                        { text: "イルミネーション", points: 3 },
+                        { text: "肉まん・あんまん", points: 2 },
+                        { text: "ストーブの前から動かない", points: 2 },
+                    ]
+                },
+                {
+                    id: 2,
+                    question: "「福島のうまいもの」といえば？",
+                    answers: [
+                        { text: "甘くてジューシーな桃", points: 40 },
+                        { text: "喜多方ラーメン", points: 25 },
+                        { text: "薄皮饅頭", points: 15 },
+                        { text: "円盤餃子", points: 10 },
+                        { text: "ままどおる", points: 10 },
+                    ]
+                },
+                {
+                    id: 3,
+                    question: "「ついやってしまう癖」は？",
+                    answers: [
+                        { text: "スマホを無意識に触る", points: 50 },
+                        { text: "貧乏ゆすり", points: 20 },
+                        { text: "髪の毛をいじる", points: 15 },
+                    ]
+                }
+            ];
+
+            const [selectedQuestionIdx, setSelectedQuestionIdx] = useState(0);
+            const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
+            const [flipped, setFlipped] = useState(new Array(9).fill(false));
+
+            const currentQuestion = quizData[activeQuestionIdx];
+
+            const handleConfirm = () => {
+                setActiveQuestionIdx(selectedQuestionIdx);
+                setFlipped(new Array(9).fill(false));
+            };
+
+            const togglePanel = (index) => {
+                if (!currentQuestion.answers[index]) return;
+                const newFlipped = [...flipped];
+                newFlipped[index] = !newFlipped[index];
+                setFlipped(newFlipped);
+            };
+
+            const resetCurrentPanels = () => {
+                setFlipped(new Array(9).fill(false));
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-start p-4 md:p-8 font-sans text-white">
+                    {/* 選択エリア */}
+                    <div className="w-full max-w-2xl bg-slate-800/50 p-6 rounded-2xl mb-8 border border-slate-700 shadow-2xl">
+                        <div className="flex flex-col md:flex-row gap-4 items-end">
+                            <div className="flex-grow w-full">
+                                <label className="block text-sm font-bold text-slate-400 mb-2">問題を選択してくろ：</label>
+                                <select
+                                    value={selectedQuestionIdx}
+                                    onChange={(e) => setSelectedQuestionIdx(parseInt(e.target.value))}
+                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-yellow-500 transition-colors"
+                                >
+                                    {quizData.map((q, idx) => (
+                                        <option key={q.id} value={idx}>
+                                            Q{q.id}: {q.question}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button
+                                onClick={handleConfirm}
+                                className="w-full md:w-auto bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-black py-2 px-8 rounded-lg transition-all shadow-lg active:scale-95 whitespace-nowrap"
+                            >
+                                問題を確定
+                            </button>
+                        </div>
+                    </div>
+
+                    <h1 className="text-2xl md:text-4xl font-bold mb-4 text-yellow-400 drop-shadow-lg tracking-widest text-center">
+                        {currentQuestion.question}
+                    </h1>
+
+                    {/* パネルグリッド */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-5xl">
+                        {[...Array(9)].map((_, index) => {
+                            const answer = currentQuestion.answers[index];
+                            const hasAnswer = !!answer;
+
+                            return (
+                                <div
+                                    key={index}
+                                    onClick={() => togglePanel(index)}
+                                    className={`group h-28 md:h-36 perspective-1000 ${hasAnswer ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}
+                                >
+                                    <div
+                                        className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${
+                                            flipped[index] ? 'rotate-x-180' : ''
+                                        }`}
+                                    >
+                                        {/* 表面 (数字) */}
+                                        <div className={`absolute inset-0 backface-hidden border-4 rounded-lg flex items-center justify-center shadow-xl ${
+                                            hasAnswer 
+                                                ? 'bg-gradient-to-b from-blue-600 to-blue-800 border-yellow-500' 
+                                                : 'bg-slate-800 border-slate-700'
+                                        }`}>
+                                            <span className={`text-6xl font-black italic drop-shadow-md ${hasAnswer ? 'text-yellow-400' : 'text-slate-600'}`}>
+                                                {index + 1}
+                                            </span>
+                                        </div>
+
+                                        {/* 裏面 (回答) */}
+                                        {hasAnswer && (
+                                            <div className="absolute inset-0 backface-hidden bg-gradient-to-b from-orange-500 to-red-600 border-4 border-yellow-400 rounded-lg flex items-center px-4 rotate-x-180 shadow-inner overflow-hidden">
+                                                <div className="flex-grow flex items-center h-full pr-2">
+                                                    <span className="text-base md:text-lg font-bold leading-tight break-words overflow-y-auto max-h-full py-1">
+                                                        {answer.text}
+                                                    </span>
+                                                </div>
+                                                <div className="flex-shrink-0 flex items-center justify-center h-full border-l-2 border-yellow-300 pl-4 ml-auto">
+                                                    <span className="text-3xl md:text-4xl font-black font-mono">
+                                                        {answer.points}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="mt-12 flex gap-4">
+                        <button
+                            onClick={resetCurrentPanels}
+                            className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-10 rounded-full transition-all shadow-lg active:scale-95 border-b-4 border-red-800"
+                        >
+                            このパネルを閉じる
+                        </button>
+                    </div>
+
+                    <div className="mt-8 text-slate-500 text-sm italic text-center">
+                        やるなら、今しかねえばい！<br/>
+                        回答がねえパネルは暗くなってっから、間違って押すこともねえぞ。
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
