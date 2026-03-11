@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>マテリアルBINGOマシーン</title>
+    <title>ビンゴでメンゴ</title>
     <!-- Google Fonts for Material Look -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
@@ -56,101 +56,122 @@
         @keyframes popIn {
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Custom Scrollbar for History (PC向けにスクロールバーを綺麗に) */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f5f5f5; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #fca5a5; /* 暖色系に合わせてスクロールバーも少し赤っぽく */
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #f87171; 
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen text-gray-800">
 
     <!-- AppBar -->
-    <header class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-50">
-        <div class="max-w-md mx-auto flex items-center justify-between">
-            <h1 class="text-xl font-bold tracking-wide">BINGO MACHINE</h1>
-            <span class="text-xs bg-indigo-700 px-2 py-1 rounded text-indigo-100">By Taizo</span>
+    <header class="bg-orange-500 text-white p-4 shadow-md sticky top-0 z-50">
+        <div class="max-w-[1400px] mx-auto flex items-center justify-between">
+            <h1 class="text-xl font-bold tracking-wide">BINGO De MENGO</h1>
+            <span class="text-xs bg-orange-600 px-2 py-1 rounded text-orange-50">たいぞーパーティー</span>
         </div>
     </header>
 
-    <main class="flex-grow flex flex-col items-center p-4 max-w-md mx-auto w-full space-y-6">
+    <!-- Main Container: 全体の幅を1400pxまで広げて、左右の比率を調整 -->
+    <main class="flex-grow flex flex-col lg:flex-row p-4 md:px-8 md:pt-4 md:pb-8 max-w-[1400px] mx-auto w-full gap-8 h-full items-start">
 
-        <!-- Controls Section -->
-        <div class="w-full material-card p-4 mt-2">
-            <label class="block text-sm font-medium text-gray-500 mb-2">お題（テーマ）を選択</label>
-            <div class="relative">
-                <select id="themeSelect" class="block appearance-none w-full bg-gray-50 border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 transition-colors">
-                    <!-- Options populated by JS -->
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+        <!-- Left Column: Controls & Roulette (幅を35%に) -->
+        <div class="w-full lg:w-[35%] flex flex-col items-center space-y-6">
+            
+            <!-- Controls Section -->
+            <div class="w-full material-card p-4 mt-1">
+                <label class="block text-sm font-medium text-gray-500 mb-2">テーマを選択</label>
+                <div class="relative">
+                    <select id="themeSelect" class="block appearance-none w-full bg-gray-50 border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-orange-500 transition-colors">
+                        <!-- Options populated by JS -->
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Main Display (The "Ball") -->
-        <!-- サイズを大きく変更 (w-64->w-80) -->
-        <div class="relative w-80 h-80 flex items-center justify-center">
-            <!-- Background circles for effect -->
-            <div class="absolute w-full h-full rounded-full bg-indigo-100 animate-pulse"></div>
-            <!-- Inner circle size increased (w-56->w-72) and added padding -->
-            <div class="absolute w-72 h-72 rounded-full bg-white shadow-xl flex items-center justify-center border-4 border-indigo-500 z-10 overflow-hidden px-6">
-                <!-- Text size adjusted for longer text handling -->
-                <div id="mainDisplay" class="text-4xl font-black text-indigo-600 text-center break-words leading-tight w-full">
-                    READY?
+            <!-- Main Display (The "Ball") -->
+            <div class="relative w-80 h-80 flex items-center justify-center">
+                <div class="absolute w-full h-full rounded-full bg-orange-100 animate-pulse"></div>
+                <div class="absolute w-72 h-72 rounded-full bg-white shadow-xl flex items-center justify-center border-4 border-orange-400 z-10 overflow-hidden px-6">
+                    <div id="mainDisplay" class="text-4xl font-black text-orange-600 text-center break-words leading-tight w-full">
+                        READY?
+                    </div>
                 </div>
             </div>
+
+            <!-- Action Button -->
+            <button id="actionBtn" class="btn-material w-full py-4 rounded-full bg-red-500 text-white font-bold text-xl tracking-wider hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                START
+            </button>
+
+            <!-- Progress Bar -->
+            <div class="w-full material-card p-2">
+                <div class="flex justify-between text-sm text-gray-600 mb-1 font-bold">
+                    <span>残り枚数</span>
+                    <span id="counter">25 / 25</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div id="progressBar" class="bg-orange-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Action Button -->
-        <button id="actionBtn" class="btn-material w-full py-4 rounded-full bg-pink-500 text-white font-bold text-xl tracking-wider hover:bg-pink-600 focus:outline-none focus:ring-4 focus:ring-pink-300 disabled:opacity-50 disabled:cursor-not-allowed">
-            START
-        </button>
-
-        <!-- Progress Bar -->
-        <div class="w-full">
-            <div class="flex justify-between text-xs text-gray-500 mb-1">
-                <span>残り枚数</span>
-                <span id="counter">25 / 25</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2.5">
-                <div id="progressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-            </div>
-        </div>
-
-        <!-- History Section -->
-        <div class="w-full pt-4 border-t border-gray-300">
-            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">確定したワード（履歴）</h3>
-            <!-- Grid columns reduced to 2 for more width per item -->
-            <div id="historyGrid" class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <!-- History items go here -->
-                <div class="text-center text-gray-400 text-sm col-span-full py-4 italic" id="emptyMsg">まだ履歴はありません</div>
+        <!-- Right Column: History Section (幅を65%に広げて、カードの横幅をしっかり確保) -->
+        <div class="w-full lg:w-[65%] flex flex-col h-[calc(103vh-120px)] material-card p-6 mt-1">
+            <h3 class="text-lg font-bold text-gray-600 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">確定ワード</h3>
+            
+            <!-- Scrollable Grid: 最大5列にしつつ、gapも少し広げる -->
+            <div class="flex-grow overflow-y-auto pr-2 custom-scrollbar">
+                <div id="historyGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                    <!-- History items go here -->
+                    <div class="text-center text-gray-400 text-sm col-span-full py-8 italic" id="emptyMsg">まだ履歴はありません</div>
+                </div>
             </div>
         </div>
 
     </main>
 
-    <footer class="text-center py-4 text-gray-400 text-xs">
-        &copy; Taizo's Material Bingo
+    <footer class="text-center py-4 text-gray-400 text-xs mt-auto">
+        &copy; Taizo Party
     </footer>
 
     <script>
         // --- Data Definitions ---
         const themes = [
             {
-                name: "数字 (1-25)",
-                items: Array.from({length: 25}, (_, i) => i + 1)
+                name: "数字 (1-30)",
+                items: Array.from({length: 30}, (_, i) => i + 1)
             },
             {
-                name: "動物ビンゴ",
-                items: ["犬", "猫", "象", "熊", "虎", "猿", "鳥", "牛", "馬", "羊", "豚", "鹿", "亀", "蛇", "蛙", "魚", "鯨", "鮫", "鷲", "鷹", "鳩", "狐", "狸", "狼", "豹"]
+                name: "寿司ネタ",
+                items: ["マグロ", "オオトロ", "カツオ", "タイ", "ヒラメ", "エンガワ", "ブリ", "ハマチ", "カンパチ", "アジ", "サバ", "コハダ", "イワシ", "イカ", "タコ", "エビ", "カニ", "ホタテ", "アワビ", "イクラ", "コーン", "ウニ", "トビコ", "カズノコ", "シラウオ", "ネギトロ", "アナゴ", "ウナギ", "たまご", "かんぴょう", "かっぱ", "なっとう", "ガリ"]
             },
             {
                 name: "定番だじゃれ",
-                items: ["布団が吹っ飛んだ", "猫が寝込む", "イカはいかが！", "おつカレー！"]
+                items: ["イルカはいるか？", "カエルがひっくり返る", "ネコが寝込んだ", "牛がうっしっし", "パンダのパンだ", "サイがうるさい", "ゾウがぞうきんがけ", "猿が去る", "鹿をしかとする", "イカはいかが？", "スイカはやすいか", "チョコをちょこっと食べる", "カレーはかれえ", "栗にびっくり", "うめえ梅", "ネギをねぎらう", "いくらはいくら？", "布団がふっとんだ", "電話に誰もでんわ", "アルミ缶の上にあるみかん", "トイレにいっといれ", "時計をほっとけい", "メガネに目がねえ", "ニューヨークで入浴", "ドイツのどいつだ？", "内臓がないぞう", "校長が絶好調", "虫を無視する", "星がほしい", "ロシアは恐ろしあ"]
             },
             {
-                name: "日本の都道府県(一部)",
-                items: ["北海道", "青森", "岩手", "宮城", "秋田", "山形", "福島", "東京", "神奈川", "埼玉", "千葉", "茨城", "栃木", "群馬", "新潟", "富山", "石川", "福井", "山梨", "長野", "岐阜", "静岡", "愛知", "大阪", "京都"]
+                name: "数字の入った四字熟語",
+                items: ["一期一会", "一石二鳥", "二人三脚", "三日坊主", "四苦八苦", "五里霧中", "七転八起", "八方美人", "九死一生", "十人十色", "百発百中", "千載一遇", "一日千秋", "二束三文", "三寒四温", "四面楚歌", "五臓六腑", "八面六臂", "千差万別", "一攫千金", "一心同体", "唯一無二", "一喜一憂", "七難八苦", "九牛一毛", "一刀両断", "百戦錬磨"]
             },
             {
-                name: "オフィス・仕事",
-                items: ["会議", "電話", "メール", "資料", "PC", "休憩", "残業", "定時", "有給", "出張", "給料", "賞与", "上司", "部下", "同僚", "顧客", "契約", "営業", "経理", "総務", "人事", "開発", "広報", "受付", "社長"]
+                name: "野菜",
+                items: ["きゃべつ", "はくさい", "ほうれんそう", "こまつな", "だいこん", "にんじん", "ごぼう", "さつまいも", "じゃがいも", "さといも", "たまねぎ", "ねぎ", "にんにく", "にら", "しょうが", "きゅうり", "なす", "かぼちゃ", "とうもろこし", "かぶ", "みつば", "もやし", "れんこん", "たけのこ", "いんげん", "ししとう", "うり", "おおば", "ぜんまい", "わらび"]
             }
         ];
 
@@ -211,7 +232,7 @@
             mainDisplay.textContent = "READY?";
             mainDisplay.classList.remove('scale-in');
             actionBtn.textContent = "START";
-            actionBtn.className = "btn-material w-full py-4 rounded-full bg-pink-500 text-white font-bold text-xl tracking-wider hover:bg-pink-600 focus:outline-none focus:ring-4 focus:ring-pink-300";
+            actionBtn.className = "btn-material w-full py-4 rounded-full bg-red-500 text-white font-bold text-xl tracking-wider hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300";
             actionBtn.disabled = false;
             
             historyGrid.innerHTML = '';
@@ -271,7 +292,7 @@
             // Restore Button Style to START (or NEXT)
             if (availableItems.length > 0) {
                 actionBtn.textContent = "NEXT";
-                actionBtn.className = "btn-material w-full py-4 rounded-full bg-pink-500 text-white font-bold text-xl tracking-wider hover:bg-pink-600 focus:outline-none focus:ring-4 focus:ring-pink-300";
+                actionBtn.className = "btn-material w-full py-4 rounded-full bg-red-500 text-white font-bold text-xl tracking-wider hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300";
             } else {
                 actionBtn.textContent = "FINISHED";
                 actionBtn.disabled = true;
@@ -289,12 +310,12 @@
             }
 
             const chip = document.createElement('div');
-            // Check if item is long (sentence) to adjust font size
+            // 横幅が広くなったので、文字が小さくなりすぎないように調整
             const isLong = String(item).length > 5;
-            const fontSize = isLong ? 'text-sm' : 'text-xl';
+            const fontSize = isLong ? 'text-sm sm:text-base' : 'text-base sm:text-lg';
             
-            // Increased min-height and adjusted padding for sentences
-            chip.className = `chip material-card p-3 flex items-center justify-center bg-indigo-50 text-indigo-900 font-bold border border-indigo-100 ${fontSize} min-h-[80px] break-words leading-tight`;
+            // 暖色系の履歴カードに変更
+            chip.className = `chip material-card p-2 sm:p-3 flex items-center justify-center bg-orange-50 text-orange-900 font-bold border border-orange-200 ${fontSize} min-h-[60px] sm:min-h-[70px] break-words leading-tight text-center`;
             chip.textContent = item;
             
             // Insert at the beginning of the grid
