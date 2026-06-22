@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>甘口？辛口？ボク早口！</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #08160e;       /* 深い森の闇 */
+      --bg-1: #0f2417;       /* 苔むした緑 */
+      --leaf: #8fd36a;       /* 若葉 */
+      --moss: #4f8a4a;       /* 苔 */
+      --sun:  #e9d28a;       /* 木漏れ日 */
+      --line: rgba(143, 211, 106, 0.24);
+    }
+
+    * { -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      background:
+        radial-gradient(ellipse at 50% -10%, #1c3a22 0%, transparent 55%),
+        linear-gradient(160deg, #0c1f13 0%, var(--bg-0) 60%, #06120b 100%);
+    }
+    .font-mincho { font-family: 'Shippori Mincho B1', serif; }
+
+    /* ===== 木漏れ日が漂う背景 ===== */
+    .aurora { position: fixed; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
+    .aurora span {
+      position: absolute; border-radius: 9999px; filter: blur(80px); opacity: 0.55;
+      animation: drift 20s ease-in-out infinite;
+    }
+    .aurora .a { width: 48vw; height: 48vw; top: -12%; left: -8%;
+      background: radial-gradient(circle at 30% 30%, #4f8a4a, transparent 70%); }
+    .aurora .b { width: 44vw; height: 44vw; bottom: -14%; right: -8%;
+      background: radial-gradient(circle at 70% 70%, #2f6b3f, transparent 70%);
+      animation-delay: -7s; }
+    .aurora .c { width: 30vw; height: 30vw; top: 22%; right: 18%;
+      background: radial-gradient(circle at 50% 50%, #e9d28a, transparent 70%);
+      opacity: 0.32; animation-delay: -13s; }
+    @keyframes drift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(4%, -5%) scale(1.12); }
+    }
+
+    /* 上から差す木漏れ日の光条 */
+    .rays {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.5;
+      background:
+        linear-gradient(102deg, transparent 30%, rgba(233,210,138,0.10) 38%, transparent 46%),
+        linear-gradient(78deg, transparent 55%, rgba(233,210,138,0.08) 64%, transparent 72%);
+      mix-blend-mode: screen;
+    }
+
+    /* ===== ガラスカード（しっとり苔色） ===== */
+    .glass {
+      background: linear-gradient(160deg, rgba(143,211,106,0.10), rgba(20,40,26,0.35));
+      backdrop-filter: blur(18px) saturate(120%);
+      -webkit-backdrop-filter: blur(18px) saturate(120%);
+      border: 1px solid rgba(143,211,106,0.18);
+      box-shadow: 0 30px 80px -20px rgba(0,0,0,0.75),
+                  inset 0 1px 0 rgba(255,255,255,0.12);
+    }
+
+    /* ===== タイトルのグラデ文字（若葉→木漏れ日） ===== */
+    .gradient-text {
+      background: linear-gradient(100deg, var(--leaf) 0%, #d7f0a8 40%, var(--sun) 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+
+    /* ===== モードトグル ===== */
+    .toggle {
+      position: relative; display: inline-flex; padding: 5px; border-radius: 9999px;
+      background: rgba(0,0,0,0.35); border: 1px solid rgba(143,211,106,0.16);
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .toggle .thumb {
+      position: absolute; top: 5px; bottom: 5px; left: 5px; border-radius: 9999px; z-index: 0;
+      transition: transform 0.45s cubic-bezier(.6,.05,.1,1), background 0.45s ease;
+      box-shadow: 0 6px 18px -6px rgba(0,0,0,0.7);
+    }
+    .toggle button {
+      position: relative; z-index: 1; border: none; background: transparent; cursor: pointer;
+      padding: 0.6rem 1.4rem; border-radius: 9999px; font-weight: 700; font-size: 0.95rem;
+      color: rgba(220,235,210,0.55); transition: color 0.35s ease; white-space: nowrap;
+    }
+    .toggle button.active { color: #0c1f13; }
+
+    /* ===== スロットのリール ===== */
+    .reel-frame {
+      position: relative; height: 5.5rem; overflow: hidden; border-radius: 0.9rem;
+      background: linear-gradient(180deg, #15301d, #0a1a10);
+      border: 1px solid rgba(143,211,106,0.12);
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.6);
+    }
+    @media (min-width: 768px) { .reel-frame { height: 6.5rem; } }
+    .reel-frame::before, .reel-frame::after {
+      content: ''; position: absolute; left: 0; right: 0; height: 38%; z-index: 3; pointer-events: none;
+    }
+    .reel-frame::before { top: 0; background: linear-gradient(180deg, rgba(6,16,10,0.95), transparent); }
+    .reel-frame::after  { bottom: 0; background: linear-gradient(0deg, rgba(6,16,10,0.95), transparent); }
+
+    .reel-strip { will-change: transform; }
+    .reel-item {
+      height: 5.5rem; display: flex; align-items: center; justify-content: center; text-align: center;
+      padding: 0 0.9rem; line-height: 1.25; font-weight: 700; color: #eaf5dd;
+      font-size: clamp(0.95rem, 3.6vw, 1.7rem);
+    }
+    @media (min-width: 768px) { .reel-item { height: 6.5rem; } }
+
+    /* 確定したリールの発光（若葉色） */
+    .reel-frame.locked {
+      border-color: var(--line);
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.6),
+                  0 0 0 1px rgba(143,211,106,0.3),
+                  0 0 24px -2px rgba(143,211,106,0.5);
+    }
+    .reel-frame.locked .reel-item { color: #fff; }
+    @keyframes pop { 0% { transform: scale(1);} 40% { transform: scale(1.05);} 100% { transform: scale(1);} }
+    .reel-frame.pop { animation: pop 0.4s ease; }
+
+    /* 行番号バッジ */
+    .badge {
+      flex: 0 0 auto; width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center;
+      border-radius: 9999px; font-weight: 700; font-size: 1.1rem; color: var(--leaf);
+      border: 1px solid var(--line); background: rgba(143,211,106,0.08);
+    }
+
+    /* ===== スタートボタン ===== */
+    .cta {
+      position: relative; overflow: hidden; cursor: pointer; border: none; width: 100%;
+      padding: 1.1rem; border-radius: 9999px; font-weight: 900; font-size: 1.35rem;
+      letter-spacing: 0.08em; color: #0c1f13;
+      background: linear-gradient(100deg, #b6e88a, #6fb84e 55%, #e9d28a);
+      box-shadow: 0 16px 36px -12px rgba(111,184,78,0.7), inset 0 1px 0 rgba(255,255,255,0.5);
+      transition: transform 0.12s ease, box-shadow 0.25s ease, filter 0.25s ease;
+    }
+    .cta:hover { filter: brightness(1.06); box-shadow: 0 22px 44px -12px rgba(111,184,78,0.85); }
+    .cta:active { transform: translateY(2px) scale(0.99); }
+    .cta .shimmer {
+      position: absolute; top: 0; left: -120%; width: 60%; height: 100%;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,0.55), transparent);
+      transform: skewX(-18deg); animation: shimmer 3.4s ease-in-out infinite;
+    }
+    @keyframes shimmer { 0% { left: -120%; } 55%, 100% { left: 160%; } }
+    .cta.busy {
+      background: rgba(255,255,255,0.07); color: rgba(220,235,210,0.5); cursor: not-allowed;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .cta.busy .shimmer { display: none; }
+
+    .fade-in { animation: fadeIn 0.8s ease both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px);} to { opacity: 1; transform: none;} }
+
+    /* ===== O / X リアクション演出 ===== */
+    .reaction {
+      position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1.2rem;
+      pointer-events: none; opacity: 0; transition: opacity 0.35s ease;
+      background: radial-gradient(ellipse at 50% 45%, rgba(6,16,10,0.55), rgba(6,16,10,0.15) 60%, transparent 75%);
+    }
+    .reaction.show { opacity: 1; }
+
+    .react-scene { position: relative; display: flex; align-items: center; justify-content: center; }
+    .react-scene svg { width: 190px; height: auto; filter: drop-shadow(0 18px 24px rgba(0,0,0,0.45)); }
+    @media (min-width: 768px) { .react-scene svg { width: 240px; } }
+
+    /* 背後のやわらかな光 */
+    .react-glow {
+      position: absolute; width: 260px; height: 260px; border-radius: 9999px;
+      filter: blur(40px); z-index: -1;
+    }
+    .react-glow.ok { background: radial-gradient(circle, rgba(233,210,138,0.7), transparent 70%); animation: glowPulse 2s ease-in-out infinite; }
+    .react-glow.ng { background: radial-gradient(circle, rgba(143,211,106,0.45), transparent 70%); animation: glowPulse 2s ease-in-out infinite; }
+    @keyframes glowPulse { 0%,100%{ transform: scale(0.92); opacity: 0.7;} 50%{ transform: scale(1.08); opacity: 1;} }
+
+    /* 登場アニメ */
+    .react-char { animation: reactPop 0.55s cubic-bezier(.2,.9,.3,1.3) both; }
+    @keyframes reactPop {
+      0% { transform: scale(0.4) translateY(60px); opacity: 0; }
+      60% { transform: scale(1.08) translateY(-8px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .bob { animation: bob 2.4s ease-in-out 0.55s infinite; transform-origin: center; }
+    @keyframes bob { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-10px);} }
+    .shake { animation: shake 0.5s ease 0.55s 2; transform-origin: center bottom; }
+    @keyframes shake { 0%,100%{ transform: rotate(0);} 25%{ transform: rotate(-5deg);} 75%{ transform: rotate(5deg);} }
+
+    /* キラキラ */
+    .spark { position: absolute; width: 14px; height: 14px; opacity: 0; }
+    .spark::before, .spark::after {
+      content: ''; position: absolute; inset: 0; background: #fff7da; border-radius: 2px;
+      box-shadow: 0 0 8px #ffe082;
+    }
+    .spark::before { transform: scaleX(0.28); }
+    .spark::after  { transform: scaleY(0.28); }
+    .spark.s1 { top: 6%; left: 14%; animation: twinkle 1.6s ease-in-out 0.4s infinite; }
+    .spark.s2 { top: 24%; right: 8%; animation: twinkle 1.6s ease-in-out 0.9s infinite; }
+    .spark.s3 { bottom: 22%; left: 4%; animation: twinkle 1.6s ease-in-out 1.3s infinite; }
+    .spark.s4 { top: 50%; right: 2%; animation: twinkle 1.6s ease-in-out 0.7s infinite; }
+    @keyframes twinkle { 0%,100%{ opacity: 0; transform: scale(0.4);} 50%{ opacity: 1; transform: scale(1.1);} }
+
+    .react-caption {
+      font-family: 'Shippori Mincho B1', serif; font-weight: 800; font-size: 1.4rem;
+      letter-spacing: 0.06em; text-align: center; padding: 0.5rem 1.4rem; border-radius: 9999px;
+      background: rgba(8,22,14,0.7); border: 1px solid var(--line);
+      animation: capIn 0.5s ease 0.25s both;
+    }
+    @media (min-width: 768px) { .react-caption { font-size: 1.7rem; } }
+    .react-caption.ok { color: #ffe9a8; }
+    .react-caption.ng { color: #bfe89a; }
+    @keyframes capIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: none;} }
+
+    /* 舞い散る花びら・葉っぱ（天使のとき） */
+    .petal { position: absolute; top: -12vh; will-change: transform;
+      animation: petalFall var(--dur) linear var(--delay) forwards; }
+    .petal > i {
+      display: block; width: var(--sz); height: var(--sz);
+      background: var(--col); border-radius: 0 100% 0 100%;
+      box-shadow: inset 0 0 4px rgba(255,255,255,0.5);
+      animation: petalSway var(--sway) ease-in-out infinite alternate;
+    }
+    @keyframes petalFall { 0% { transform: translateY(-12vh); opacity: 0; }
+      8% { opacity: 1; } 100% { transform: translateY(116vh); opacity: 0.9; } }
+    @keyframes petalSway { from { transform: translateX(-16px) rotate(-35deg); }
+      to { transform: translateX(16px) rotate(35deg); } }
+
+    /* 画面上の O / X 判定ボタン（控えめ・小さめ） */
+    .judge-btns { position: fixed; bottom: 1rem; right: 1rem; z-index: 40; display: flex; gap: 0.5rem; }
+    .judge-btn {
+      width: 40px; height: 40px; border-radius: 9999px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
+      color: rgba(255,255,255,0.45); background: rgba(8,22,14,0.45);
+      border: 1px solid rgba(255,255,255,0.16); backdrop-filter: blur(6px);
+      transition: color 0.25s ease, border-color 0.25s ease, transform 0.12s ease, opacity 0.25s ease;
+      opacity: 0.55;
+    }
+    .judge-btn:hover { opacity: 1; }
+    .judge-btn.ok:hover { color: #ffe9a8; border-color: rgba(233,210,138,0.55); }
+    .judge-btn.ng:hover { color: #bfe89a; border-color: var(--line); }
+    .judge-btn:active { transform: scale(0.9); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 text-white select-none relative">
+
+  <!-- 背景 -->
+  <div class="aurora"><span class="a"></span><span class="b"></span><span class="c"></span></div>
+  <div class="rays"></div>
+
+  <!-- タイトル -->
+  <header class="relative z-10 text-center mb-5 fade-in">
+    <p class="font-mincho tracking-[0.5em] text-sm md:text-base text-white/55 mb-3 pl-[0.5em]">甘口 ？ 辛口 ？</p>
+    <h1 class="font-mincho gradient-text text-5xl md:text-7xl font-extrabold tracking-wide drop-shadow-[0_4px_20px_rgba(143,211,106,0.35)]">
+      ボク早口！
+    </h1>
+    <div class="mx-auto mt-2 h-px w-44 md:w-56" style="background:linear-gradient(90deg,transparent,var(--line),transparent);"></div>
+  </header>
+
+  <!-- メインカード -->
+  <main class="glass relative z-10 rounded-[2rem] p-5 md:p-9 w-full max-w-3xl fade-in" style="animation-delay:0.1s;">
+
+    <!-- モード切替 -->
+    <div class="flex justify-center mb-5">
+      <div class="toggle" id="toggle">
+        <span class="thumb" id="thumb"></span>
+        <button id="btn-standard" class="active" data-mode="standard">定番</button>
+        <button id="btn-taizo" data-mode="taizo">たいぞーオリジナル</button>
+      </div>
+    </div>
+
+    <!-- スロット -->
+    <div class="flex flex-col gap-3 md:gap-4 mb-2">
+      <div class="flex items-center gap-3 md:gap-4">
+        <div class="badge font-mincho">壱</div>
+        <div class="reel-frame flex-1" id="reel-0"><div class="reel-strip"><div class="reel-item">定番の</div></div></div>
+      </div>
+      <div class="flex items-center gap-3 md:gap-4">
+        <div class="badge font-mincho">弐</div>
+        <div class="reel-frame flex-1" id="reel-1"><div class="reel-strip"><div class="reel-item">早口言葉に</div></div></div>
+      </div>
+      <div class="flex items-center gap-3 md:gap-4">
+        <div class="badge font-mincho">参</div>
+        <div class="reel-frame flex-1" id="reel-2"><div class="reel-strip"><div class="reel-item">挑戦しよう</div></div></div>
+      </div>
+    </div>
+
+    <!-- スタート -->
+    <button id="btn-start" class="cta">
+      <span class="shimmer"></span>
+      <span id="cta-label">スロットスタート</span>
+    </button>
+  </main>
+
+  <!-- O / X リアクション演出のオーバーレイ -->
+  <div class="reaction" id="reaction"></div>
+
+  <!-- 画面上の判定ボタン（キーボードが無くても押せる・控えめ） -->
+  <div class="judge-btns">
+    <button id="judge-ok" class="judge-btn ok" type="button" aria-label="うまく言えた（天使）" title="うまく言えた（O）">◯</button>
+    <button id="judge-ng" class="judge-btn ng" type="button" aria-label="噛んじゃった（くま）" title="噛んじゃった（X）">✕</button>
+  </div>
+
+  <!-- ヒント -->
+  <footer class="relative z-10 mt-7 text-center text-white/45 text-xs md:text-sm leading-relaxed fade-in" style="animation-delay:0.2s;">
+    <p>ボタンを押すと、重複しない3つの早口言葉が上から順に止まります。</p>
+    <p>揃ったら、一気に読み上げてみましょう。</p>
+    <p class="mt-2 text-white/35">うまく言えたら <b class="text-yellow-200/80">O</b> キー、噛んじゃったら <b class="text-green-200/80">X</b> キー！</p>
+  </footer>
+
+  <script>
+    const standardWords = [
+      "生麦生米生卵", "赤巻紙 青巻紙 黄巻紙", "骨粗鬆症（こつそしょうしょう）",
+      "隣の客はよく柿食う客だ", "東京特許許可局",
+      "坊主が屏風に上手に坊主の絵を描いた", "蛙ピョコピョコ３ピョコピョコ<br>あわせてピョコピョコ６ピョコピョコ",
+      "すももも桃も桃のうち", "マサチューセッツ工科大学", "老若男女", "新春シャンソンショー","赤カピバラ 青カピバラ 黄カピバラ"
+    ];
+
+    const taizoWords = [
+      "ポンコツ コンポタ コングラチュレーション",
+      "石巻でゴマキとカルーセル麻紀と<br>のり巻きパーティ",
+      "ムチムチ モチモチ　むち打ち持ちのあんたの餅",
+      "百粒白米　決して吐くまい",
+      "桜井　坂崎　高見沢",
+      "東京海上　あき竹城",
+      "ローマの老婆がロバの上でろばた焼き食べた",
+      "早見優 速く言う　蒼井優 あおりくう<br>あびる優 詫びを言う",
+      "ひろみ郷　ヒュイゴー！"
+    ];
+
+    const placeholders = {
+      standard: ["定番の", "早口言葉に", "挑戦しよう"],
+      taizo:    ["たいぞーの", "オリジナルに", "立ち向かえ！"]
+    };
+
+    let currentMode = 'standard';
+    let isSpinning = false;
+
+    const thumb = document.getElementById('thumb');
+    const btnStandard = document.getElementById('btn-standard');
+    const btnTaizo = document.getElementById('btn-taizo');
+    const btnStart = document.getElementById('btn-start');
+    const ctaLabel = document.getElementById('cta-label');
+    const frames = [0,1,2].map(i => document.getElementById('reel-' + i));
+    const strips = frames.map(f => f.querySelector('.reel-strip'));
+
+    function positionThumb() {
+      const active = currentMode === 'standard' ? btnStandard : btnTaizo;
+      thumb.style.width = active.offsetWidth + 'px';
+      thumb.style.transform = 'translateX(' + (active.offsetLeft - 5) + 'px)';
+      thumb.style.background = currentMode === 'standard'
+        ? 'linear-gradient(100deg,#b6e88a,#6fb84e)'   /* 定番：若葉 */
+        : 'linear-gradient(100deg,#e9d28a,#d4a94e)';  /* たいぞー：木漏れ日 */
+    }
+
+    function setMode(mode) {
+      if (isSpinning || mode === currentMode) return;
+      currentMode = mode;
+      btnStandard.classList.toggle('active', mode === 'standard');
+      btnTaizo.classList.toggle('active', mode === 'taizo');
+      positionThumb();
+      placeholders[mode].forEach((t, i) => {
+        frames[i].classList.remove('locked', 'pop');
+        strips[i].style.transform = 'translateY(0)';
+        strips[i].innerHTML = '<div class="reel-item">' + t + '</div>';
+      });
+    }
+
+    btnStandard.addEventListener('click', () => setMode('standard'));
+    btnTaizo.addEventListener('click', () => setMode('taizo'));
+    window.addEventListener('resize', positionThumb);
+    window.addEventListener('load', positionThumb);
+    positionThumb();
+
+    function itemHeight() {
+      return window.matchMedia('(min-width: 768px)').matches ? 6.5 * 16 : 5.5 * 16;
+    }
+
+    // 1つのリールを回して final で止める（重複なしの確定ワード）
+    function spinReel(index, finalWord, words, duration) {
+      return new Promise(resolve => {
+        const strip = strips[index];
+        const frame = frames[index];
+        const H = itemHeight();
+
+        const count = 26 + Math.floor(Math.random() * 8);
+        let html = '';
+        for (let k = 0; k < count; k++) {
+          html += '<div class="reel-item">' + words[Math.floor(Math.random() * words.length)] + '</div>';
+        }
+        html += '<div class="reel-item">' + finalWord + '</div>';
+        strip.innerHTML = html;
+
+        const targetY = -count * H;
+        const start = performance.now();
+
+        function frameTick(now) {
+          let t = (now - start) / duration;
+          if (t > 1) t = 1;
+          const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+          strip.style.transform = 'translateY(' + (targetY * eased) + 'px)';
+          if (t < 1) {
+            requestAnimationFrame(frameTick);
+          } else {
+            frame.classList.add('locked', 'pop');
+            resolve();
+          }
+        }
+        requestAnimationFrame(frameTick);
+      });
+    }
+
+    btnStart.addEventListener('click', async () => {
+      if (isSpinning) return;
+      isSpinning = true;
+
+      btnStart.classList.add('busy');
+      ctaLabel.textContent = '回転中…';
+      frames.forEach(f => f.classList.remove('locked', 'pop'));
+
+      const words = currentMode === 'standard' ? standardWords : taizoWords;
+      // 重複なしで3つ抽選
+      const shuffled = [...words].sort(() => 0.5 - Math.random());
+      const picks = shuffled.slice(0, 3);
+
+      const durations = [1800, 2500, 3200];
+      await Promise.all(picks.map((w, i) => spinReel(i, w, words, durations[i])));
+
+      isSpinning = false;
+      btnStart.classList.remove('busy');
+      ctaLabel.textContent = 'もう一回！';
+    });
+
+    /* ===== O / X リアクション ===== */
+    // 天使がお水を差し出す
+    const ANGEL_SVG = `
+      <svg class="react-char bob" viewBox="0 0 220 250" xmlns="http://www.w3.org/2000/svg">
+        <!-- 翼 -->
+        <ellipse cx="66" cy="158" rx="36" ry="24" fill="#ffffff" opacity="0.95"/>
+        <ellipse cx="154" cy="158" rx="36" ry="24" fill="#ffffff" opacity="0.95"/>
+        <ellipse cx="66" cy="158" rx="20" ry="13" fill="#eef4ff"/>
+        <ellipse cx="154" cy="158" rx="20" ry="13" fill="#eef4ff"/>
+        <!-- 体（ローブ） -->
+        <path d="M84 168 Q110 150 136 168 L150 236 Q110 248 70 236 Z" fill="#fbfdff"/>
+        <path d="M84 168 Q110 150 136 168 L132 188 Q110 196 88 188 Z" fill="#eaf1ff"/>
+        <!-- 腕とコップ -->
+        <path d="M92 182 Q86 206 100 214" stroke="#ffe0c2" stroke-width="9" fill="none" stroke-linecap="round"/>
+        <path d="M128 182 Q134 206 120 214" stroke="#ffe0c2" stroke-width="9" fill="none" stroke-linecap="round"/>
+        <g>
+          <path d="M98 208 L122 208 L118 234 L102 234 Z" fill="#cfeeff" opacity="0.92"/>
+          <path d="M101 218 L119 218 L118 234 L102 234 Z" fill="#7cc6f0"/>
+          <ellipse cx="110" cy="208" rx="12" ry="3.2" fill="#eaf8ff"/>
+        </g>
+        <!-- 顔 -->
+        <circle cx="110" cy="118" r="42" fill="#ffe5cf"/>
+        <!-- 前髪 -->
+        <path d="M70 112 Q72 78 110 76 Q148 78 150 112 Q140 96 110 96 Q80 96 70 112 Z" fill="#f6c97a"/>
+        <!-- 光輪 -->
+        <ellipse cx="110" cy="66" rx="34" ry="9" fill="none" stroke="#ffe082" stroke-width="6"/>
+        <!-- 目 -->
+        <circle cx="96" cy="120" r="5" fill="#5b4636"/>
+        <circle cx="124" cy="120" r="5" fill="#5b4636"/>
+        <circle cx="97.5" cy="118" r="1.6" fill="#fff"/>
+        <circle cx="125.5" cy="118" r="1.6" fill="#fff"/>
+        <!-- ほっぺ -->
+        <circle cx="86" cy="132" r="7" fill="#ffb3c1" opacity="0.7"/>
+        <circle cx="134" cy="132" r="7" fill="#ffb3c1" opacity="0.7"/>
+        <!-- 口 -->
+        <path d="M102 132 Q110 140 118 132" stroke="#b5705a" stroke-width="3" fill="none" stroke-linecap="round"/>
+      </svg>`;
+
+    // くまがガオー
+    const BEAR_SVG = `
+      <svg class="react-char shake" viewBox="0 0 220 250" xmlns="http://www.w3.org/2000/svg">
+        <!-- 上げた手 -->
+        <circle cx="54" cy="176" r="20" fill="#b9824c"/>
+        <circle cx="166" cy="176" r="20" fill="#b9824c"/>
+        <!-- 耳 -->
+        <circle cx="70" cy="80" r="26" fill="#a9743f"/>
+        <circle cx="150" cy="80" r="26" fill="#a9743f"/>
+        <circle cx="70" cy="80" r="13" fill="#caa074"/>
+        <circle cx="150" cy="80" r="13" fill="#caa074"/>
+        <!-- 顔 -->
+        <circle cx="110" cy="128" r="64" fill="#b9824c"/>
+        <!-- 口まわり -->
+        <ellipse cx="110" cy="150" rx="36" ry="29" fill="#ecd6b3"/>
+        <!-- 目 -->
+        <circle cx="86" cy="120" r="7.5" fill="#3a2a1a"/>
+        <circle cx="134" cy="120" r="7.5" fill="#3a2a1a"/>
+        <circle cx="88" cy="117.5" r="2.2" fill="#fff"/>
+        <circle cx="136" cy="117.5" r="2.2" fill="#fff"/>
+        <!-- ほっぺ -->
+        <circle cx="72" cy="142" r="9" fill="#e8889a" opacity="0.45"/>
+        <circle cx="148" cy="142" r="9" fill="#e8889a" opacity="0.45"/>
+        <!-- 鼻と口（ガオー） -->
+        <ellipse cx="110" cy="138" rx="9" ry="6.5" fill="#3a2a1a"/>
+        <path d="M110 144 L110 150" stroke="#3a2a1a" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="110" cy="160" rx="11" ry="8" fill="#7a3b34"/>
+      </svg>`;
+
+    const reaction = document.getElementById('reaction');
+    let reactTimer = null;
+
+    // 花びら・葉っぱを舞わせる
+    const PETAL_COLORS = ['#ffd1e0', '#ffc0d4', '#ffe1ec', '#a8e08a', '#c7ee9c'];
+    function spawnPetals(n) {
+      let html = '';
+      for (let i = 0; i < n; i++) {
+        const left = Math.random() * 100;
+        const sz = 9 + Math.random() * 9;
+        const dur = 3.2 + Math.random() * 2.4;
+        const delay = Math.random() * 1.2;
+        const sway = 1 + Math.random() * 1.2;
+        const col = PETAL_COLORS[Math.floor(Math.random() * PETAL_COLORS.length)];
+        html += '<div class="petal" style="left:' + left + '%;'
+              + '--sz:' + sz + 'px;--dur:' + dur + 's;--delay:' + delay + 's;'
+              + '--sway:' + sway + 's;--col:' + col + ';"><i></i></div>';
+      }
+      reaction.insertAdjacentHTML('beforeend', html);
+    }
+
+    function showReaction(type) {
+      const isOk = type === 'ok';
+      reaction.innerHTML =
+        '<div class="react-scene">' +
+          '<div class="react-glow ' + (isOk ? 'ok' : 'ng') + '"></div>' +
+          (isOk ? ANGEL_SVG : BEAR_SVG) +
+          (isOk ? '<i class="spark s1"></i><i class="spark s2"></i><i class="spark s3"></i><i class="spark s4"></i>' : '') +
+        '</div>' +
+        '<p class="react-caption ' + (isOk ? 'ok' : 'ng') + '">' +
+          (isOk ? 'おみごと！ はい、お水どうぞ 💧' : 'ガオー！ どんまい、もう一回！') +
+        '</p>';
+
+      if (isOk) spawnPetals(18);
+
+      // 連打しても毎回アニメをやり直す
+      void reaction.offsetWidth;
+      reaction.classList.add('show');
+      clearTimeout(reactTimer);
+      reactTimer = setTimeout(() => reaction.classList.remove('show'), 2800);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      const k = e.key.toLowerCase();
+      if (k === 'o') showReaction('ok');
+      else if (k === 'x') showReaction('ng');
+    });
+
+    document.getElementById('judge-ok').addEventListener('click', () => showReaction('ok'));
+    document.getElementById('judge-ng').addEventListener('click', () => showReaction('ng'));
+  </script>
+</body>
+</html>
